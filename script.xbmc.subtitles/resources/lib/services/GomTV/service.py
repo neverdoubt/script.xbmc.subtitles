@@ -69,9 +69,8 @@ class GomTvWebService:
         
     def SearchSubtitlesFromTitle (self, searchString,key):
         subtitles = []
-        subtitles = []
-
         q_url = "http://gom.gomtv.com/jmdb/search.html?key=%s" %key
+	print q_url
         log(__name__, "search subtitle at %s"  %q_url)
 
         # main page
@@ -101,31 +100,48 @@ class GomTvWebService:
             html = urllib2.urlopen(req).read()
         # regular search result page
         soup = BeautifulSoup(html)
-        subtitles = []
-        for row in soup.find("table",{"class":"tbl_lst"}).findAll("tr")[1:]:
-            a_node = row.find("a")
-            if a_node is None:
-                continue
-            title = a_node.text
-            lang_node_string = row.find("span",{"class":"txt_clr3"}).string
-            url = self.root_url + a_node["href"]
-            if u"한글" in lang_node_string:
-                langlong  = "Korean"
-            elif u"영문" in lang_node_string:
-                langlong  = "English"
-            else:   # [통합]
-                langlong  = "Korean"
-            langshort = languageTranslate(langlong, 0, 2)
-            subtitles.append( {
-                "link"          : url,
-                "filename"      : title,
-                "ID"            : key,
-                "format"        : "smi",
-                "sync"          : True,
-                "rating"        : "0",
-                "language_name" : langlong,
-                "language_flag" : "flags/%s.gif" %langshort
-            } )            
+	subtitles = []
+	if "a href=\"jamak://gom.gomtv.com" in html:
+		title = soup.find("div",{"class":"row_r cpd2"}).text
+		print q_url
+		print title
+		langlong = "Korean"
+		langshort = languageTranslate(langlong, 0, 2)
+		subtitles.append( {
+			"link"          : q_url,
+			"filename"      : title,
+			"ID"            : key,
+			"format"        : "smi",
+			"sync"          : True,
+			"rating"        : "0",
+			"language_name" : "Korean",
+			"language_flag" : "flags/%s.gif" %langshort
+		    } )
+	else:
+		for row in soup.find("table",{"class":"tbl_lst"}).findAll("tr")[1:]:
+		    a_node = row.find("a")
+		    if a_node is None:
+			continue
+		    title = a_node.text
+		    lang_node_string = row.find("span",{"class":"txt_clr3"}).string
+		    url = self.root_url + a_node["href"]
+		    if u"한글" in lang_node_string:
+			langlong  = "Korean"
+		    elif u"영문" in lang_node_string:
+			langlong  = "English"
+		    else:   # [통합]
+			langlong  = "Korean"
+		    langshort = languageTranslate(langlong, 0, 2)
+		    subtitles.append( {
+			"link"          : url,
+			"filename"      : title,
+			"ID"            : key,
+			"format"        : "smi",
+			"sync"          : True,
+			"rating"        : "0",
+			"language_name" : langlong,
+			"language_flag" : "flags/%s.gif" %langshort
+		    } )            
             
         q_url = "http://gom.gomtv.com/main/index.html?ch=subtitles&pt=l&menu=subtitles&lang=0&sValue=%s" %searchString
         print q_url
@@ -157,33 +173,34 @@ class GomTvWebService:
             req.add_header("User-Agent", self.agent_str)
             html = urllib2.urlopen(req).read()
         # regular search result page
-        soup = BeautifulSoup(html)
-        for row in soup.find("table",{"class":"tbl_lst"}).findAll("tr")[1:]:
-            if row is None:
-        	      continue
-            a_node = row.find("a")
-            if a_node is None:
-                continue
-            title = a_node.text
-            lang_node_string = row.find("span",{"class":"txt_clr3"}).string
-            url = self.root_url + a_node["href"]
-            if u"한글" in lang_node_string:
-                langlong  = "Korean"
-            elif u"영문" in lang_node_string:
-                langlong  = "English"
-            else:   # [통합]
-                langlong  = "Korean"
-            langshort = languageTranslate(langlong, 0, 2)
-            subtitles.append( {
-                "link"          : url,
-                "filename"      : title,
-                "ID"            : key,
-                "format"        : "smi",
-                "sync"          : False,
-                "rating"        : "0",
-                "language_name" : langlong,
-                "language_flag" : "flags/%s.gif" %langshort
-            } )            
+	soup = BeautifulSoup(html)	
+	for row in soup.find("table",{"class":"tbl_lst"}).findAll("tr")[1:]:
+	    if row is None:
+		      continue
+	    a_node = row.find("a")
+	    if a_node is None:
+		continue
+	    title = a_node.text
+	    lang_node_string = row.find("span",{"class":"txt_clr3"}).string
+	    url = self.root_url + a_node["href"]
+	    if u"한글" in lang_node_string:
+		langlong  = "Korean"
+	    elif u"영문" in lang_node_string:
+		langlong  = "English"
+	    else:   # [통합]
+		langlong  = "Korean"
+	    langshort = languageTranslate(langlong, 0, 2)
+	    subtitles.append( {
+		"link"          : url,
+		"filename"      : title,
+		"ID"            : key,
+		"format"        : "smi",
+		"sync"          : False,
+		"rating"        : "0",
+		"language_name" : langlong,
+		"language_flag" : "flags/%s.gif" %langshort
+	    } )
+
         return subtitles
 
     def parseRedirectionPage(self, html):
